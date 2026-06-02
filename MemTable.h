@@ -9,23 +9,72 @@ typedef struct BlackRedTree{
 Read-only functions, passes a const pointer
 so it makes sure it doesnt change the values of the MemTable
 */
+void printMemTable(Node *node){//Print, Left, Right
+    if(node != NULL){   
+        printf("%d", node->value);
+        printMemTable(node->left);
+        printMemTable(node->right);    
+    }
+};
 void read(const MemTable *tree){
     if(tree == NULL || tree->root == NULL){
         printf("Arvore Vazia");
         return;
     }
-        printf("-------------------");
-        printMemTable(tree->root);
-        printf("-------------------");
+    printf("-------------------");
+    printMemTable(tree->root);
+    printf("-------------------");
+};
+void LeftR(MemTable *tree, Node *pivot){
+    //pivot desce
+    //seu filho sobe (y)
+    //filho esquerdo de y sobe
+    Node *y = pivot->right;
+    pivot->right = y->left;
+    
+    if (y->left != NULL) {
+        y->left->parent = pivot;
+    }
+    
+    y->parent = pivot->parent;
+    
+    if (pivot->parent == NULL) {
+        tree->root = y; 
+    } else if (pivot == pivot->parent->left) {
+        pivot->parent->left = y;
+    } else {
+        pivot->parent->right = y;
+    }
+    
+    y->left = pivot;
+    pivot->parent = y;
 };
 
-void printMemTable(Node *node){//Print, Left, Right
-    if(node == NULL) return;
-
-    printf("%d", node->value);
-    printMemTable(node->left);
-    printMemTable(node->right);    
+void RightR(MemTable *tree, Node *pivot){
+    //pivot desce
+    //seu filho sobe (x)
+    //filho direito de x sobe
+    Node *x = pivot->left; // 
+    pivot->left = x->right;
+    
+    if (x->right != NULL) {
+        x->right->parent = pivot;
+    }
+    
+    x->parent = pivot->parent;
+    
+    if (pivot->parent == NULL) {
+        tree->root = x; 
+    } else if (pivot == pivot->parent->right) {
+        pivot->parent->right = x;
+    } else {
+        pivot->parent->left = x;
+    }
+    
+    x->right = pivot;
+    pivot->parent = x;
 };
+
 
 /*
 Write functions
@@ -104,53 +153,3 @@ void insert(MemTable *tree, Node *newNode) {
     newNode->right = NULL;
     newNode->color = RED;
 }
-
-void LeftR(MemTable *tree, Node *pivot){
-    //pivot desce
-    //seu filho sobe (y)
-    //filho esquerdo de y sobe
-    Node *y = pivot->right;
-    pivot->right = y->left;
-    
-    if (y->left != NULL) {
-        y->left->parent = pivot;
-    }
-    
-    y->parent = pivot->parent;
-    
-    if (pivot->parent == NULL) {
-        tree->root = y; 
-    } else if (pivot == pivot->parent->left) {
-        pivot->parent->left = y;
-    } else {
-        pivot->parent->right = y;
-    }
-    
-    y->left = pivot;
-    pivot->parent = y;
-};
-
-void RightR(MemTable *tree, Node *pivot){
-    //pivot desce
-    //seu filho sobe (x)
-    //filho direito de x sobe
-    Node *x = pivot->left; // 
-    pivot->left = x->right;
-    
-    if (x->right != NULL) {
-        x->right->parent = pivot;
-    }
-    
-    x->parent = pivot->parent;
-    
-    if (pivot->parent == NULL) {
-        tree->root = x; 
-    } else if (pivot == pivot->parent->right) {
-        pivot->parent->right = x;
-    } else {
-        pivot->parent->left = x;
-    }
-    
-    x->right = pivot;
-    pivot->parent = x;
-};
