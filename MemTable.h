@@ -9,22 +9,31 @@ typedef struct BlackRedTree{
 Read-only functions, passes a const pointer
 so it makes sure it doesnt change the values of the MemTable
 */
-void printMemTable(Node *node){//Print, Left, Right
-    if(node != NULL){   
-        printf("%d", node->value);
-        printMemTable(node->left);
-        printMemTable(node->right);    
+void printMemTable(Node *node, int nivel, FILE *f){//Print, Left, Right -- Pre-order
+    if(node != NULL){
+
+        for(int i = 0; i < nivel; i++){
+            printf("     ");
+        }
+        
+        fprintf(f, "|-- [Nivel %d] -> %d \n", nivel, node->value);
+        printMemTable(node->left, nivel + 1, f);
+        printMemTable(node->right, nivel + 1, f);
     }
 };
+
 void read(const MemTable *tree){
+    FILE *f;
+    fopen("SSTables.txt", "w");
     if(tree == NULL || tree->root == NULL){
-        printf("Arvore Vazia");
+        fprintf(f, "Arvore Vazia");
         return;
     }
-    printf("-------------------");
-    printMemTable(tree->root);
-    printf("-------------------");
+    fprintf(f, "-------------------\n");
+    printMemTable(tree->root, 0, f);
+    fprintf(f, "-------------------");
 };
+
 void LeftR(MemTable *tree, Node *pivot){
     //pivot desce
     //seu filho sobe (y)
