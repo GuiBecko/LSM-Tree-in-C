@@ -9,31 +9,35 @@ typedef struct BlackRedTree{
 Read-only functions, passes a const pointer
 so it makes sure it doesnt change the values of the MemTable
 */
-void printMemTable(Node *node, int nivel, FILE *f){//Print, Left, Right -- Pre-order
+void printMemTable(Node *node, int nivel){//Print, Left, Right -- Pre-order
     if(node != NULL){
 
         for(int i = 0; i < nivel; i++){
             printf("     ");
         }
         
-        fprintf(f, "|-- [Nivel %d] -> %d \n", nivel, node->value);
-        printMemTable(node->left, nivel + 1, f);
-        printMemTable(node->right, nivel + 1, f);
+        printf("|-- [Nivel %d] -> %d \n", nivel, node->value);
+        printMemTable(node->left, nivel + 1);
+        printMemTable(node->right, nivel + 1);
     }
 };
 
 void read(const MemTable *tree){
-    FILE *f;
-    fopen("SSTables.txt", "w");
     if(tree == NULL || tree->root == NULL){
-        fprintf(f, "Arvore Vazia");
+        printf("Arvore Vazia");
         return;
     }
-    fprintf(f, "-------------------\n");
-    printMemTable(tree->root, 0, f);
-    fprintf(f, "-------------------");
+    printf("-------------------\n");
+    printMemTable(tree->root, 0);
+    printf("-------------------");
 };
 
+flush(const MemTable *memtable){//flushes the tree to an SSTable
+
+}
+/*
+Write functions
+*/
 void LeftR(MemTable *tree, Node *pivot){
     //pivot desce
     //seu filho sobe (y)
@@ -85,9 +89,7 @@ void RightR(MemTable *tree, Node *pivot){
 };
 
 
-/*
-Write functions
-*/
+
 void insertFixup(MemTable *tree, Node *z) {
     while (z != tree->root && z->parent->color == RED) {
         
