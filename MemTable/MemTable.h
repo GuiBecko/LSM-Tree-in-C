@@ -39,8 +39,14 @@ void read(const MemTable *tree){
     printf("-------------------");
 };
 
-void flush(const MemTable *memtable){
-
+void flush(const Node *node, FILE *f){ //Left, Print, Right - In-Order
+    
+    if(node != NULL){
+        flush(node->left, f);
+        fprintf(f, "%d %s\n", node->pokemon->index, node->pokemon->name);
+        flush(node->right, f);
+    }
+    
 } //flushes the tree to an SSTable
 
 /*
@@ -145,7 +151,6 @@ void insertFixup(MemTable *tree, Node *z) {
 }
 
 void insert(MemTable *tree, Node *newNode) {
-    printf("Comecando a insercao\n");
     Node *y = NULL;
     Node *x = tree->root;
 

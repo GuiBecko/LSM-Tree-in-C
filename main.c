@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "./MemTable/MemTable.h"
 #include "./MemTable/Node.h"
+#include "./SSTable/sstable.h"
 
 int main(){
     MemTable *memtable = createMemTable();
@@ -11,18 +12,26 @@ int main(){
     Node *node2 = createNode("Gyrados");
     Node *node3 = createNode("Tiranitar");
     Node *node4 = createNode("Doublade");
+    Node *node5 = createNode("Arceus");
+
+    printf("inserindo os nodes\n");
+    insert(memtable, node1);
+    insert(memtable, node2);
+    insert(memtable, node3);
+    insert(memtable, node4);
+    insert(memtable, node5);
+
+    //read(memtable);
 
     
-    printf("Inserindo na arvore node 1\n");
-    insert(memtable, node1);
-    printf("Inserindo na arvore node 2\n");
-    insert(memtable, node2);
-    printf("Inserindo na arvore node 3\n");
-    insert(memtable, node3);
-    printf("Inserindo na arvore node 4\n");
-    insert(memtable, node4);
+    FILE *f = fopen("SSTable.txt", "w+");
+    flush(memtable->root, f);
     
-    read(memtable);
+
+    //searchSSTablebyName(f, "Doublade");
+    searchSSTablebyIndex(f, 1);
+    fclose(f);
+
 
     return 0;
 }
