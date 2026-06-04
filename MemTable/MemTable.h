@@ -5,6 +5,13 @@ typedef struct BlackRedTree{
     Node *root;
 } MemTable;
 
+MemTable* createMemTable(){
+    printf("Inicializando a arvore\n");
+    MemTable *memtable = (MemTable*) malloc(sizeof(MemTable));
+    memtable->root = NULL;
+    return memtable;
+}
+
 /*
 Read-only functions, passes a const pointer
 so it makes sure it doesnt change the values of the MemTable
@@ -32,9 +39,8 @@ void read(const MemTable *tree){
     printf("-------------------");
 };
 
-flush(const MemTable *memtable){//flushes the tree to an SSTable
+//void flush(const MemTable *memtable) //flushes the tree to an SSTable
 
-}
 /*
 Write functions
 */
@@ -58,6 +64,7 @@ void LeftR(MemTable *tree, Node *pivot){
     } else {
         pivot->parent->right = y;
     }
+    
     
     y->left = pivot;
     pivot->parent = y;
@@ -136,6 +143,7 @@ void insertFixup(MemTable *tree, Node *z) {
 }
 
 void insert(MemTable *tree, Node *newNode) {
+    printf("Comecando a insercao\n");
     Node *y = NULL;
     Node *x = tree->root;
 
@@ -149,7 +157,7 @@ void insert(MemTable *tree, Node *newNode) {
             return; 
         }
     }
-
+    
     newNode->parent = y;
     
     if (y == NULL) {
@@ -163,4 +171,5 @@ void insert(MemTable *tree, Node *newNode) {
     newNode->left = NULL;
     newNode->right = NULL;
     newNode->color = RED;
+    insertFixup(tree, newNode);
 }

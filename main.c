@@ -1,28 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "MemTable.h"
-#include "Node.h"
+#include "./MemTable/MemTable.h"
+#include "./MemTable/Node.h"
 
 int main(){
-    MemTable *memtable = (MemTable*) malloc(sizeof(MemTable));
-    Node *node1 = (Node*) malloc(sizeof(Node));
-    Node *node2 = (Node*) malloc(sizeof(Node));
-    Node *node3 = (Node*) malloc(sizeof(Node));
-    Node *node4 = (Node*) malloc(sizeof(Node));
-    Node *node5 = (Node*) malloc(sizeof(Node));
+    MemTable *memtable = createMemTable();
 
-    node1->value = 3;
-    node2->value = 4;
-    node3->value = 6;
-    node4->value = 1;
-    node5->value = 2;
+    printf("Inicializando os nodes\n");
+    Node *node1 = createNode(-3);
+    Node *node2 = createNode(0);
+    Node *node3 = createNode(99);
+    Node *node4 = createNode(36);
 
+    
+    printf("Inserindo na arvore node 1\n");
     insert(memtable, node1);
+    printf("Inserindo na arvore node 2\n");
     insert(memtable, node2);
+    printf("Inserindo na arvore node 3\n");
     insert(memtable, node3);
+    printf("Inserindo na arvore node 4\n");
     insert(memtable, node4);
-    insert(memtable, node5);
-
+    
     read(memtable);
 
     return 0;
