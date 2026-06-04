@@ -23,7 +23,7 @@ void printMemTable(Node *node, int nivel){//Print, Left, Right -- Pre-order
             printf("     ");
         }
         
-        printf("|-- [Nivel %d] -> %d \n", nivel, node->value);
+        printf("|-- [Nivel %d] -> [%d] %s \n", nivel, node->pokemon->index, node->pokemon->name);
         printMemTable(node->left, nivel + 1);
         printMemTable(node->right, nivel + 1);
     }
@@ -39,7 +39,9 @@ void read(const MemTable *tree){
     printf("-------------------");
 };
 
-//void flush(const MemTable *memtable) //flushes the tree to an SSTable
+void flush(const MemTable *memtable){
+
+} //flushes the tree to an SSTable
 
 /*
 Write functions
@@ -149,9 +151,9 @@ void insert(MemTable *tree, Node *newNode) {
 
     while (x != NULL) {
         y = x;
-        if (newNode->value < x->value) {
+        if (newNode->pokemon->index < x->pokemon->index) {
             x = x->left;
-        } else if (newNode->value > x->value) {
+        } else if (newNode->pokemon->index > x->pokemon->index) {
             x = x->right;
         } else {
             return; 
@@ -162,7 +164,7 @@ void insert(MemTable *tree, Node *newNode) {
     
     if (y == NULL) {
         tree->root = newNode;
-    } else if (newNode->value < y->value) {
+    } else if (newNode->pokemon->index < y->pokemon->index) {
         y->left = newNode;
     } else {
         y->right = newNode;
