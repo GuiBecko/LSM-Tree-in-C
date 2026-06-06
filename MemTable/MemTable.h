@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include "Node.h"
+#define boolean int
+#define true  1
+#define false  0
 
 typedef struct BlackRedTree{
     Node *root;
@@ -22,12 +25,12 @@ void printMemTable(Node *node, int nivel){//Print, Left, Right -- Pre-order
         for(int i = 0; i < nivel; i++){
             printf("     ");
         }
-        
+
         printf("|-- [Nivel %d] -> [%d] %s \n", nivel, node->pokemon->index, node->pokemon->name);
         printMemTable(node->left, nivel + 1);
         printMemTable(node->right, nivel + 1);
     }
-};
+}
 
 void read(const MemTable *tree){
     if(tree == NULL || tree->root == NULL){
@@ -101,7 +104,7 @@ void RightR(MemTable *tree, Node *pivot){
     
     x->right = pivot;
     pivot->parent = x;
-};
+}
 
 
 
@@ -179,4 +182,23 @@ void insert(MemTable *tree, Node *newNode) {
     newNode->right = NULL;
     newNode->color = RED;
     insertFixup(tree, newNode);
+}
+
+void delete(MemTable *memtable, int deleteID){
+    Node *x = memtable->root;
+
+    while(x != NULL){
+        if(deleteID > x->pokemon->index){
+            x = x->right;
+        }else if(deleteID < x->pokemon->index){
+            x = x->left;
+        }else{
+            x->isDeleted = true;
+            strcpy(x->pokemon->name, " TB ");
+            return;
+        }
+    }
+
+    Node *tombstone = createTombstone(deleteID);
+    insert(memtable, tombstone);
 }

@@ -1,5 +1,8 @@
 #ifndef NODE_H
 #define NODE_H
+#define boolean int
+#define true 1
+#define false 0
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +16,7 @@ typedef struct Node{
     struct Node *right;
     struct Node *parent;
     Color color;
+    boolean isDeleted;
 } Node;
 
 int createIndex(){
@@ -33,10 +37,27 @@ Node* createNode(const char *name){
         newNode->right = NULL;
         newNode->parent = NULL;
         newNode->color = RED;
+        newNode->isDeleted = false;
     }
 
     return newNode;
 }
 
+Node* createTombstone(int id){
+    Node *newTombstone = (Node*) malloc(sizeof(Node));
+    Pokemon *pokemon = (Pokemon*) malloc(sizeof(Pokemon));
+    strcpy(pokemon->name, " TB ");
+    pokemon->index = id;
+
+    if(newTombstone != NULL){
+        newTombstone->pokemon = pokemon;
+        newTombstone->left = NULL;
+        newTombstone->right = NULL;
+        newTombstone->parent = NULL;
+        newTombstone->color = RED;
+        newTombstone->isDeleted = true;
+    }
+    return newTombstone;
+}
 
 #endif
