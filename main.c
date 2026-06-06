@@ -8,16 +8,20 @@ int main(){
     MemTable *memtable = createMemTable();
 
     Node *node1 = createNode("Pikachu");
-    Node *node2 = createNode("Charizard"); 
-
+    Node *node2 = createNode("Hitmonlee");
     insert(memtable, node1);
     insert(memtable, node2);
-    
-    delete(memtable, 1);
 
-    read(memtable);
-    FILE *f = fopen("SSTable.txt", "w+");
-    flush(memtable->root, f);
-    fclose(f);
+    flush(memtable);
+    
+    Node *node3 = createNode("Raichu");
+    Node *node4 = createNode("Hitmonchan");
+
+    insert(memtable, node3);
+    insert(memtable, node4);
+
+    readMemTable(memtable);
+    flush(memtable);
+
     return 0;
 }

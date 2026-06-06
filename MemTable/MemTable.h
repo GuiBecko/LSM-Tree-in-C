@@ -1,5 +1,8 @@
 #include <stdio.h>
+#include <dirent.h>
+#include <ctype.h>
 #include "Node.h"
+
 #define boolean int
 #define true  1
 #define false  0
@@ -32,29 +35,78 @@ void printMemTable(Node *node, int nivel){//Print, Left, Right -- Pre-order
     }
 }
 
-void read(const MemTable *tree){
+void readMemTable(const MemTable *tree){
     if(tree == NULL || tree->root == NULL){
         printf("Arvore Vazia");
         return;
     }
     printf("-------------------\n");
     printMemTable(tree->root, 0);
-    printf("-------------------");
+    printf("-------------------\n");
 };
-
-void flush(const Node *node, FILE *f){ //Left, Print, Right - In-Order
-    
-    if(node != NULL){
-        flush(node->left, f);
-        fprintf(f, "%d %s\n", node->pokemon->index, node->pokemon->name);
-        flush(node->right, f);
-    }
-    
-} //flushes the tree to an SSTable
 
 /*
 Write functions
 */
+
+void flushHelper(Node* node, FILE *f){ //Left, Print, Right - In-Order
+    if(node != NULL){
+        flushHelper(node->left, f);
+        fprintf(f, "%d %s\n", node->pokemon->index, node->pokemon->name);
+        flushHelper(node->right, f);
+        free(node->pokemon);
+        free(node);
+    }
+}
+
+void flush(MemTable *memtable){ 
+    DIR *dir = opendir("./SSTables");
+    struct dirent *entry;
+
+    if(dir == NULL){
+        printf("Could not find SSTables directory");
+        return;
+    }
+
+    int max_sstable_number = 0;
+    while((entry = readdir(dir)) != NULL){
+
+        if(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0){
+            continue;
+        }
+
+        char currentNumberStr[20] = {0};
+        int j = 0;
+
+        // Extrai apenas os dígitos do nome do arquivo
+        for(int i = 0; entry->d_name[i] != '\0'; i++){
+            if(isdigit((unsigned char)entry->d_name[i])){
+                currentNumberStr[j] = entry->d_name[i];
+                j++;
+            }
+        }
+
+        if(j > 0){
+            int currentNumber = atoi(currentNumberStr);
+            if(currentNumber > max_sstable_number){
+                max_sstable_number = currentNumber;
+            }
+        }
+    }
+    closedir(dir);
+
+    int number = max_sstable_number + 1;
+    char newFileName[50];
+    sprintf(newFileName, "./SSTables/SSTable%d.txt", number);
+
+
+    FILE *f = fopen(newFileName, "w");
+    Node *node = memtable->root;
+    flushHelper(node, f);
+    fclose(f);
+    memtable->root = NULL;
+} 
+
 void LeftR(MemTable *tree, Node *pivot){
     //pivot desce
     //seu filho sobe (y)
