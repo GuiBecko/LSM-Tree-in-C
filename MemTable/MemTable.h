@@ -37,14 +37,28 @@ void printMemTable(Node *node, int nivel){//Print, Left, Right -- Pre-order
 
 void readMemTable(const MemTable *tree){
     if(tree == NULL || tree->root == NULL){
-        printf("Arvore Vazia");
+        printf("Arvore Vazia\n");
         return;
     }
     printf("-------------------\n");
     printMemTable(tree->root, 0);
     printf("-------------------\n");
 };
-
+void searchMemTableByID_Helper(Node *node, int id){
+    if(node != NULL){
+        if(node->pokemon->index == id){
+            printf("Node encontrado:\n");
+            printf("[%d] - %s", node->pokemon->index, node->pokemon->name);
+        }
+    }
+}
+void searchMemTableByID(MemTable *memtable, int id){
+    if(memtable == NULL || memtable->root == NULL){
+        printf("Arvore Vazia");
+        return;
+    }
+    searchMemTableByID_Helper(memtable->root, id);
+}
 /*
 Write functions
 */
