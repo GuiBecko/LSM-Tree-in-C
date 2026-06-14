@@ -19,8 +19,13 @@ typedef struct Node{
     boolean isDeleted;
 } Node;
 
+static int global_index = 0;
+
+void setGlobalIndex(int val) {
+    global_index = val;
+}
+
 int createIndex(){
-    static int global_index = 0;
     return ++global_index;
 }
 

@@ -1,10 +1,54 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "./SSTable/SSTable.h"
 #include "./MemTable/MemTable.h"
 #include "./MemTable/Node.h"
-#include "./SSTable/sstable.h"
+
+void loadLastId() {
+    DIR *dir = opendir("./SSTables");
+    if (dir == NULL) {
+        return;
+    }
+
+    struct dirent *entry;
+    int last_id = 0;
+    
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        int currentNumber = 0;
+        if (sscanf(entry->d_name, "SSTable%d.txt", &currentNumber) == 1) {
+            char filename[100];
+            sprintf(filename, "./SSTables/%s", entry->d_name);
+            FILE *f = fopen(filename, "r");
+            if (f != NULL) {
+                char line[100];
+                int file_max_id = 0;
+                while (fgets(line, sizeof(line), f)) {
+                    int id;
+                    if (sscanf(line, "%d", &id) == 1) {
+                        if (id > file_max_id) {
+                            file_max_id = id;
+                        }
+                    }
+                }
+                fclose(f);
+                if (file_max_id > last_id) {
+                    last_id = file_max_id;
+                }
+            }
+        }
+    }
+    closedir(dir);
+
+    setGlobalIndex(last_id);
+    printf("ID dos proximos pokemons atualizado para iniciar em: %d\n", last_id + 1);
+}
 
 int main(){
+    loadLastId();
     MemTable *memtable = createMemTable();
 
     int option = 1;
@@ -44,7 +88,7 @@ int main(){
             case 4:
                 printf("Digite o id do pokemon a ser buscado\n");
                 scanf("%d", &id);
-                searchMemTableByID(memtable, id);
+                searchMemTable(memtable->root, id);
                 break;
             case 5:
                 printf("Digite o id do pokemon a ser deletado\n");
