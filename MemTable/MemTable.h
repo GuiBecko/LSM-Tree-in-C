@@ -2,6 +2,7 @@
 #include <dirent.h>
 #include <ctype.h>
 #include "Node.h"
+#include "../SSTable/SSTable.h"
 
 #define boolean int
 #define true  1
