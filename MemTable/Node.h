@@ -8,10 +8,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "Color.h"
-#include "Pokemon.h"
 
 typedef struct Node{
-    Pokemon *pokemon;
+    int key;
+    void *data;
+    int rowsize;
     struct Node *left;
     struct Node *right;
     struct Node *parent;
@@ -29,15 +30,13 @@ int createIndex(){
     return ++global_index;
 }
 
-Node* createNode(const char *name){
+Node* createNode(const void *data, int rowsize){
     Node *newNode = (Node*) malloc(sizeof(Node));
     
-    Pokemon *pokemon = (Pokemon*) malloc(sizeof(Pokemon));
-    strcpy(pokemon->name, name);
-    pokemon->index = createIndex();
-
     if(newNode != NULL){
-        newNode->pokemon = pokemon;
+        newNode->data = data;
+        newNode->key = createIndex();
+        newNode->rowsize = rowsize;
         newNode->left = NULL;
         newNode->right = NULL;
         newNode->parent = NULL;
@@ -50,12 +49,10 @@ Node* createNode(const char *name){
 
 Node* createTombstone(int id){
     Node *newTombstone = (Node*) malloc(sizeof(Node));
-    Pokemon *pokemon = (Pokemon*) malloc(sizeof(Pokemon));
-    strcpy(pokemon->name, " TB ");
-    pokemon->index = id;
 
     if(newTombstone != NULL){
-        newTombstone->pokemon = pokemon;
+        newTombstone->data = NULL;
+        newTombstone->key = id;
         newTombstone->left = NULL;
         newTombstone->right = NULL;
         newTombstone->parent = NULL;

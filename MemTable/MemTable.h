@@ -30,7 +30,7 @@ void printMemTable(Node *node, int nivel){//Print, Left, Right -- Pre-order
             printf("     ");
         }
 
-        printf("|-- [Nivel %d] -> [%d] %s \n", nivel, node->pokemon->index, node->pokemon->name);
+        printf("|-- [Nivel %d] -> [%d] %s \n", nivel, node->key, (char*)node->data);
         printMemTable(node->left, nivel + 1);
         printMemTable(node->right, nivel + 1);
     }
@@ -48,12 +48,12 @@ void readMemTable(const MemTable *tree){
 
 int searchMemTableHelper(Node *node, int id){
     if(node != NULL){
-        if(node->pokemon->index == id){
+        if(node->key == id){
             printf("Node encontrado na memtable:\n");
-            printf("[%d] - %s\n", node->pokemon->index, node->pokemon->name); 
+            printf("[%d] - %s\n", node->key, (char*)node->data); 
             return 1;
         }else{
-            if(node->pokemon->index > id){
+            if(node->key > id){
                 return searchMemTableHelper(node->left, id);
             }else{
                 return searchMemTableHelper(node->right, id);
@@ -75,9 +75,13 @@ Write functions
 void flushHelper(Node* node, FILE *f){ //Left, Print, Right - In-Order
     if(node != NULL){
         flushHelper(node->left, f);
-        fprintf(f, "%d %s\n", node->pokemon->index, node->pokemon->name);
-        flushHelper(node->right, f);
-        free(node->pokemon);
+        fwrite(&(node->key), sizeof(int), 1, f);
+        fwrite(&(node->rowsize), sizeof(int), 1, f);
+        
+        if(node->rowsize > 0 && node->data != NULL){
+            fwrite(node->data, node->rowsize, 1, f);
+        }
+
         free(node);
     }
 }
@@ -120,15 +124,15 @@ void flush(MemTable *memtable){
 
     int number = max_sstable_number + 1;
     char newFileName[50];
-    sprintf(newFileName, "./SSTables/SSTable%d.txt", number);
+    sprintf(newFileName, "./SSTables/SSTable%d.dat", number);
 
 
-    FILE *f = fopen(newFileName, "w");
+    FILE *f = fopen(newFileName, "wb");
     Node *node = memtable->root;
     flushHelper(node, f);
     fclose(f);
     memtable->root = NULL;
-} 
+}
 
 void LeftR(MemTable *tree, Node *pivot){
     //pivot desce
@@ -234,9 +238,9 @@ void insert(MemTable *tree, Node *newNode) {
 
     while (x != NULL) {
         y = x;
-        if (newNode->pokemon->index < x->pokemon->index) {
+        if (newNode->key < x->key) {
             x = x->left;
-        } else if (newNode->pokemon->index > x->pokemon->index) {
+        } else if (newNode->key > x->key) {
             x = x->right;
         } else {
             return; 
@@ -247,7 +251,7 @@ void insert(MemTable *tree, Node *newNode) {
     
     if (y == NULL) {
         tree->root = newNode;
-    } else if (newNode->pokemon->index < y->pokemon->index) {
+    } else if (newNode->key < y->key) {
         y->left = newNode;
     } else {
         y->right = newNode;
@@ -263,13 +267,12 @@ void delete(MemTable *memtable, int deleteID){
     Node *x = memtable->root;
 
     while(x != NULL){
-        if(deleteID > x->pokemon->index){
+        if(deleteID > x->key){
             x = x->right;
-        }else if(deleteID < x->pokemon->index){
+        }else if(deleteID < x->key){
             x = x->left;
         }else{
             x->isDeleted = true;
-            strcpy(x->pokemon->name, " TB ");
             return;
         }
     }

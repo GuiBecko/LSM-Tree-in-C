@@ -1,100 +1,76 @@
+#ifndef SSTABLE_H
+#define SSTABLE_H
+
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include "./../MemTable/Pokemon.h"
 
-void searchSSTable(int id){
-    DIR *dir = opendir("./SSTables");
-    if (dir == NULL) {
-        printf("Diretório SSTables não encontrado ou vazio.\n");
+#include "Index.h"
+
+void searchSSTable(int id) {
+    if (sparseIndexCount == 0) {
+        printf("Nenhum dado no disco.\n");
         return;
     }
 
-    // 1. Encontra o número da SSTable mais recente
-    int max_sstable_number = 0;
-    struct dirent *entry;
-    
-    while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            continue;
-        }
+    // 1. Busca Binária O(log n) NA MEMÓRIA RAM (Piscou, achou)
+    int l = 0;
+    int r = sparseIndexCount - 1;
+    sparseIndexEntry *found_entry = NULL;
 
-        char currentNumberStr[20] = {0};
-        int j = 0;
-        for (int i = 0; entry->d_name[i] != '\0'; i++) {
-            if (isdigit((unsigned char)entry->d_name[i])) {
-                currentNumberStr[j++] = entry->d_name[i];
-            }
-        }
-        if (j > 0) {
-            int currentNumber = atoi(currentNumberStr);
-            if (currentNumber > max_sstable_number) {
-                max_sstable_number = currentNumber;
-            }
+    while (l <= r) {
+        int m = l + (r - l) / 2;
+        if (sparseIndex[m].minKey == id) {
+            found_entry = &sparseIndex[m];
+            break;
+        } else if (sparseIndex[m].minKey < id) {
+            l = m + 1;
+        } else {
+            r = m - 1;
         }
     }
-    closedir(dir);
 
-    // 2. Loop Reverso: Da SSTable mais nova até a SSTable 1
-    for (int i = max_sstable_number; i >= 1; i--) {
-        char filename[50];
-        sprintf(filename, "./SSTables/SSTable%d.txt", i);
-
-        FILE *f = fopen(filename, "r"); 
-        if (f == NULL) continue; 
-
-        printf("Buscando na SSTable%d...\n", i);
-
-        // 3. Busca Binária no Disco
-        fseek(f, 0, SEEK_END);
-        long r = ftell(f);
-        long l = 0;
-
-        while (r >= l) {
-            long m = l + (r - l) / 2;
-            fseek(f, m, SEEK_SET);
-
-            // Truque de alinhamento: avança até a próxima linha se cairmos no meio de uma palavra
-            if (m != 0) {
-                int ch;
-                while ((ch = fgetc(f)) != '\n' && ch != EOF) {}
-            }
-
-            char content[1000];
-            if (!fgets(content, 1000, f)) {
-                // Se não conseguiu ler nada, o cursor bateu no final do arquivo (EOF)
-                r = m - 1; 
-                continue;
-            }
-
-            int index;
-            char pokemonName[30];
-            sscanf(content, "%d %s", &index, pokemonName);
-
-            // Avalia o resultado da busca
-            if (index == id) {
-                if (strcmp(pokemonName, "TB") == 0) {
-                    // O escudo da Tombstone funcionou! Achamos a lápide.
-                    printf("Pokemon deletado (Tombstone encontrada na SSTable%d)!\n", i);
-                } else {
-                    printf("Encontrado na SSTable%d: [%d] %s\n", i, index, pokemonName);
-                }
-                fclose(f);
-                return; // Achou o dado ou a lápide, encerra a função imediatamente!
-                
-            } else if (index < id) {
-                // Precisa ir para a direita. ftell(f) nos dá a posição exata após o fgets
-                l = ftell(f); 
-            } else {
-                // Precisa ir para a esquerda
-                r = m - 1;
-            }
-        }
-        fclose(f); // Fecha o arquivo atual e vai para a SSTable mais antiga (i--)
+    if (found_entry == NULL) {
+        printf("Node nao encontrado.\n");
+        return;
     }
 
-    // Se o loop terminar e não achar em NENHUMA SSTable
-    printf("Pokemon nao encontrado em nenhuma SSTable.\n");
+    // 2. O "Tiro Certeiro" no Disco O(1)
+    char filename[50];
+    sprintf(filename, "./SSTables/SSTable%d.dat", found_entry->fileNum); 
+    FILE *f = fopen(filename, "rb"); // "rb" porque o arquivo é binário (.dat)
+
+    if (f != NULL) {
+        // Pula instantaneamente para o byte exato onde o Node começa
+        fseek(f, found_entry->offset, SEEK_SET);
+
+        int disk_key;
+        int disk_rowsize;
+
+        // Lemos como foi gravado no flushHelper: primeiro a key, depois o rowsize
+        fread(&disk_key, sizeof(int), 1, f);
+        fread(&disk_rowsize, sizeof(int), 1, f);
+
+        // 3. Verificamos a lápide lendo o rowsize gravado no disco
+        if (disk_rowsize == 0) {
+            printf("Node deletado (Tombstone encontrada) na SSTable%d!\n", found_entry->fileNum);
+        } else {
+            // Se não é lápide, alocamos espaço e lemos a string de dados
+            char *linha = (char*) malloc(disk_rowsize + 1);
+            fread(linha, disk_rowsize, 1, f);
+            linha[disk_rowsize] = '\0'; // Adiciona terminador nulo por segurança
+
+            printf("Encontrado na SSTable%d: [%d] %s\n", found_entry->fileNum, disk_key, linha);
+            
+            free(linha); // Evita vazamento de memória
+        }
+        
+        fclose(f);
+    } else {
+        printf("Falha ao abrir a SSTable%d.\n", found_entry->fileNum);
+    }
 }
+
+#endif
